@@ -1,72 +1,5 @@
-type HiringSignals = {
-  role_title: string;
-  company: string;
-  location: string;
-  required_skills: string[];
-  nice_to_have_skills: string[];
-  tools: string[];
-  seniority: string;
-  language_requirement: string;
-  fit_for_my_profile: "Yes" | "Maybe" | "No";
-  fit_reason: string;
-  application_positioning: string;
-};
-
-const userProfile = {
-  career_direction: [
-    "Moving from product/UI-UX background into AI/data product building",
-    "Interested in AI automation, dashboards, data products, internal tools",
-    "Wants to avoid pure Figma/UI-only roles",
-  ],
-  target_roles: [
-    "AI Automation Specialist",
-    "AI/Data Product Builder",
-    "AI Workflow Developer",
-    "Product/Data Analyst",
-    "Technical Product Specialist",
-    "Junior AI Solutions Consultant",
-  ],
-  avoid_roles: [
-    "Pure senior Product Designer",
-    "Visual UI Designer",
-    "Pure ML Engineer",
-    "Heavy backend-only Software Engineer",
-  ],
-  experience: [
-    "Built RhinoStats independently using React, Vite, Tailwind, Python, and pandas",
-    "Worked at Sagacity on an AI-powered B2B learning platform",
-    "Worked at Bosch on UX, dashboards, app feedback analysis, and design systems",
-    "Worked at TOMRA on B2B SaaS dashboards for industrial machine data",
-    "Led design/frontend work at Deerwalk for e-learning products",
-  ],
-  skills: {
-    product_design: [
-      "Figma",
-      "Framer",
-      "Prototyping",
-      "Design systems",
-      "Dashboards",
-    ],
-    frontend: ["HTML", "CSS", "JavaScript", "React", "Vue.js", "TypeScript"],
-    research: [
-      "Usability testing",
-      "Heuristic evaluation",
-      "Hotjar",
-      "User feedback analysis",
-    ],
-    data_ai: ["Python", "pandas", "Claude", "Cursor", "Codex", "Groq API workflows"],
-  },
-  languages: {
-    english: "Fluent",
-    german: "A2/B1, actively learning",
-  },
-  fit_rules: {
-    yes: "Role combines AI, automation, product thinking, data, dashboards, internal tools, frontend, or workflow building.",
-    maybe:
-      "Role is adjacent but has gaps such as stronger SQL, Python, cloud, backend, or German requirements.",
-    no: "Role is mostly pure visual design, senior UX leadership, pure ML engineering, heavy backend engineering, or requires fluent German.",
-  },
-};
+import { userProfile } from "@/src/lib/userProfile";
+import type { HiringSignals } from "@/src/app/lib/jobTypes";
 
 const userProfileText = JSON.stringify(userProfile, null, 2);
 
@@ -86,6 +19,14 @@ Use exactly this shape:
   "language_requirement": "",
   "fit_for_my_profile": "Yes | Maybe | No",
   "fit_reason": "",
+  "application_priority": "High | Medium | Low",
+  "missing_skills": [],
+  "risk_factors": [],
+  "interview_angle": "",
+  "evidence_from_job_post": [],
+  "assumptions": [],
+  "confidence": "High | Medium | Low",
+  "next_learning_step": "",
   "application_positioning": ""
 }
 
@@ -95,6 +36,13 @@ Rules:
 - fit_for_my_profile must be exactly "Yes", "Maybe", or "No".
 - Evaluate fit_for_my_profile using the career profile below and its fit_rules.
 - application_positioning should be practical advice for positioning this person's application to this specific job.
+- evidence_from_job_post should include short phrases or signals from the job post that justify the fit assessment.
+- assumptions should mention what you are inferring but cannot know for certain.
+- missing_skills should be honest and specific.
+- risk_factors should explain why this application may fail.
+- next_learning_step should suggest one practical thing the candidate should learn or build next.
+- confidence must be exactly "High", "Medium", or "Low".
+- application_priority must be exactly "High", "Medium", or "Low".
 
 Career profile:
 ${userProfileText}`;
@@ -143,6 +91,18 @@ function normalizeFit(value: unknown): HiringSignals["fit_for_my_profile"] {
     : "Maybe";
 }
 
+function normalizePriority(value: unknown): HiringSignals["application_priority"] {
+  return value === "High" || value === "Medium" || value === "Low"
+    ? value
+    : "Medium";
+}
+
+function normalizeConfidence(value: unknown): HiringSignals["confidence"] {
+  return value === "High" || value === "Medium" || value === "Low"
+    ? value
+    : "Medium";
+}
+
 function normalizeHiringSignals(value: unknown): HiringSignals {
   if (!isRecord(value)) {
     throw new Error("The model response was not a JSON object.");
@@ -159,6 +119,14 @@ function normalizeHiringSignals(value: unknown): HiringSignals {
     language_requirement: toString(value.language_requirement),
     fit_for_my_profile: normalizeFit(value.fit_for_my_profile),
     fit_reason: toString(value.fit_reason),
+    application_priority: normalizePriority(value.application_priority),
+    missing_skills: toStringArray(value.missing_skills),
+    risk_factors: toStringArray(value.risk_factors),
+    interview_angle: toString(value.interview_angle),
+    evidence_from_job_post: toStringArray(value.evidence_from_job_post),
+    assumptions: toStringArray(value.assumptions),
+    confidence: normalizeConfidence(value.confidence),
+    next_learning_step: toString(value.next_learning_step),
     application_positioning: toString(value.application_positioning),
   };
 }
